@@ -1,0 +1,64 @@
+plugins {
+    id 'java'
+    id 'org.jetbrains.kotlin.jvm' version '2.1.20'
+}
+
+java {
+    sourceCompatibility = JavaVersion.VERSION_17
+    targetCompatibility = JavaVersion.VERSION_17
+}
+
+kotlin {
+    compilerOptions {
+        jvmTarget = org.jetbrains.kotlin.gradle.dsl.JvmTarget.JVM_17
+    }
+}
+
+// Java and Kotlin both live in 'src' (Starsector convention).
+sourceSets.main.java.srcDirs = ['src']
+sourceSets.main.kotlin.srcDirs = ['src']
+
+repositories {
+    mavenCentral()
+}
+
+dependencies {
+    // Starsector core (obfuscated game classes + bundled libs)
+    compileOnly fileTree(dir: "${starsectorPath}/starsector-core", include: '*.jar')
+
+    // Library mods we depend on
+    compileOnly fileTree(dir: "${starsectorPath}/mods/LunaLib-2.0.5/jars", include: '*.jar')
+    compileOnly fileTree(dir: "${starsectorPath}/mods/LazyLib-3.0.0/jars", include: '*.jar')
+
+    // The Kotlin runtime is provided AT RUNTIME by LazyLib (jars/internal/Kotlin-Runtime.jar) on
+    // Starsector's shared classloader, so we compile against it but must NOT bundle our own copy.
+    // kotlin.stdlib.default.dependency=false (gradle.properties) stops the plugin adding one.
+    compileOnly files("${starsectorPath}/mods/LazyLib-3.0.0/jars/internal/Kotlin-Runtime.jar")
+}
+
+jar {
+    destinationDirectory = file('jars')
+    archiveFileName = 'IntelRenewed.jar'
+}
+
+/**
+ * Starsector's script class loader refuses java.io / java.nio.file / java.lang.reflect to every
+ * class a mod ships, and the refusal lands wherever the class is first touched at runtime. Scan the
+ * compiled classes' constant pools so that mistake fails the build instead of the game. The vendored
+ * uiframework resolves reflection through the game's own permitted path and is exempt.
+ */
+tasks.register('checkNoForbiddenApis') {
+    dependsOn 'classes'
+    doLast {
+        def forbidden = ['java/io/', 'java/nio/file/', 'java/lang/reflect/']
+        def bad = []
+        fileTree(dir: "${buildDir}/classes", include: '**/*.class').each { f ->
+            if (f.path.replace(File.separator, '/').contains('/uiframework/')) return
+            def bytes = f.bytes
+            def text = new String(bytes, 'ISO-8859-1')
+            forbidden.each { p -> if (text.contains(p)) bad << "${f.name} -> ${p}" }
+        }
+        if (!bad.isEmpty()) throw new GradleException("Forbidden API references:\n  " + bad.join("\n  "))
+    }
+}
+tasks.named('jar') { dependsOn 'checkNoForbiddenApis' }

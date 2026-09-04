@@ -1,0 +1,11 @@
+fieldID,fieldName,fieldType,defaultValue,secondaryValue,fieldDescription,minValue,maxValue,tab
+ir_header_popups,Popups Header,Header,Popups,,,,,Behaviour
+ir_mute_popups,Silence popups of hidden entries,Boolean,true,,"When on, an entry you have hidden (its kind, its category, or the entry itself) no longer shows the message popup in the bottom-left corner. Turn this off to keep the popups while the entries stay hidden on the intel screen.",,,Behaviour
+,,,,,,,,
+ir_header_appearance,Appearance Header,Header,Customize window,,,,,Appearance
+ir_border_color,Outline colour,Color,#80ccff,,"Colour of the outline drawn around the Customize window and the search strip on the intel screen.",,,Appearance
+ir_panel_opacity,Background opacity,Double,0.92,,"How solid the Customize window's black background is. [0] is fully transparent, [1] is fully opaque.",0,1,Appearance
+,,,,,,,,
+ir_header_prefs,Preferences Header,Header,Saved preferences,,,,,Preferences
+ir_prefs_text,Preferences Text,Text,"Hidden kinds and hidden categories are stored once per installation, in [saves/common/intel_renewed/], so they carry over to every playthrough. Single entries you hide are stored in that save only. Nothing is ever deleted from the game: hidden entries are only kept off the screen and can be brought back from the Customize window on the intel screen.",,,,,Preferences
+ir_wipe_prefs,Wipe saved preferences,Boolean,false,,"Turn this on and press [Apply] to erase every hidden kind and category and start from an empty slate. Entries hidden per save are not affected. This cannot be undone. The toggle resets itself to off once the wipe has run, so it will read as off again the next time you open this menu.",,,Preferences
