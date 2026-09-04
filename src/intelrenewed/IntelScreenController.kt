@@ -5,6 +5,7 @@ import com.fs.starfarer.api.campaign.comm.IntelInfoPlugin
 import com.fs.starfarer.api.ui.ButtonAPI
 import com.fs.starfarer.api.ui.CustomPanelAPI
 import com.fs.starfarer.api.ui.TextFieldAPI
+import com.fs.starfarer.api.ui.TooltipMakerAPI
 import com.fs.starfarer.api.ui.UIComponentAPI
 import com.fs.starfarer.api.ui.UIPanelAPI
 import com.fs.starfarer.api.util.Misc
@@ -18,6 +19,7 @@ import intelrenewed.uiframework.ReflectionUtils.getFieldsMatching
 import intelrenewed.uiframework.ReflectionUtils.invoke
 import intelrenewed.uiframework.Text
 import intelrenewed.uiframework.TextField
+import intelrenewed.uiframework.Tooltip
 import intelrenewed.uiframework.bottom
 import intelrenewed.uiframework.drawBorder
 import intelrenewed.uiframework.getChildrenCopy
@@ -55,9 +57,16 @@ object IntelScreenController {
     private const val ROW_H = 22f
     private const val STRIP_PAD = 4f
 
+    private const val TEXT_HIDE_ENTRY = "Hide this entry"
+    private const val TEXT_UNHIDE_ENTRY = "Unhide this entry"
+    private const val TEXT_HIDE_KIND = "Hide all like this"
+    private const val TEXT_UNHIDE_KIND = "Unhide all like this"
+
     private var boundPanel: UIPanelAPI? = null
     private var boundList: Any? = null
     private var lastSignature = ""
+    private var lastInputs = ""
+    private var pendingScrollY: Float? = null
 
     private var strip: CustomPanelAPI? = null
     private var searchField: TextFieldAPI? = null
@@ -81,15 +90,51 @@ object IntelScreenController {
             if (t != ViewState.searchText) ViewState.searchText = t
         }
 
+        // Our own inputs changed (a hide/unhide, the search text, the reveal toggle): rows we removed
+        // earlier may have to come back, and we only ever remove, so let the game rebuild its full
+        // list first and filter that.
+        val inputs = filterInputs()
+        if (inputs != lastInputs) {
+            lastInputs = inputs
+            runCatching { refreshFromGame(panel, list) }
+                .onFailure { log.error("Intel Renewed: could not ask the game to rebuild the intel list.", it) }
+        }
+
         val tags = findTags(panel)
         val sig = signature(list, tags)
         if (sig != lastSignature) {
             applyFilter(panel, list, tags)
             lastSignature = signature(list, tags)
+            pendingScrollY?.let { y ->
+                pendingScrollY = null
+                runCatching {
+                    val scroller = list.invoke("getScroller") ?: return@runCatching
+                    scroller.invoke("setYOffset", y)
+                    scroller.invoke("clampOffset")
+                }
+            }
         }
 
         updateStripButtons(panel)
         CustomizePanel.advance(panel)
+    }
+
+    /** Everything that changes what we hide, independent of what the game has drawn. */
+    private fun filterInputs(): String =
+        "${IntelPrefs.revision}|${EntryHides.revision}|${ViewState.searchText}|${ViewState.showHidden}"
+
+    /**
+     * Asks the game for a fresh, complete row list (keeping the scroll position), after first
+     * dropping the selection if the selected entry is about to be hidden, so the description pane
+     * does not keep showing an entry that is no longer in the list.
+     */
+    private fun refreshFromGame(panel: UIPanelAPI, list: Any) {
+        val selected = selectedIntel(panel)
+        if (selected != null && (shouldHide(selected) || !IntelRules.matchesSearch(selected, ViewState.searchText))) {
+            runCatching { panel.invoke("selectItem", null) }
+        }
+        pendingScrollY = runCatching { list.invoke("getScroller")?.invoke("getYOffset") as? Float }.getOrNull()
+        panel.invoke("updateIntelList", true)
     }
 
     /** The intel tab is no longer open: forget the panel so the next opening injects afresh. */
@@ -130,6 +175,8 @@ object IntelScreenController {
         hideKindBtn = null
         showHiddenBox = null
         CustomizePanel.forget()
+        lastInputs = filterInputs()
+        pendingScrollY = null
         IrDebug.dumpTree(panel, "EventsPanel")
         runCatching { injectStrip(panel) }.onFailure { log.error("Intel Renewed: could not add the search strip.", it) }
         if (ViewState.customizeOpen) CustomizePanel.open(panel)
@@ -292,21 +339,32 @@ object IntelScreenController {
 
             // Row 2: act on the selected entry, and the momentary reveal.
             val thirdW = (inner - 2f * gap) / 3f
-            hideEntryBtn = Button("Hide entry", base, bg, width = thirdW, height = ROW_H, font = Font.VICTOR_14) {
+            hideEntryBtn = Button(TEXT_HIDE_ENTRY, base, bg, width = thirdW, height = ROW_H, font = Font.VICTOR_14) {
                 position.inTL(pad, row2)
                 onClick { selectedIntel(panel)?.let { toggleEntryHidden(it) } }
             }
-            hideKindBtn = Button("Hide kind", base, bg, width = thirdW, height = ROW_H, font = Font.VICTOR_14) {
+            (hideEntryBtn as UIComponentAPI).Tooltip(TooltipMakerAPI.TooltipLocation.BELOW, 300f) {
+                addPara("Hides only the entry selected in the list, in this save. " +
+                    "Turn on Show hidden to see it again and press the button once more to bring it back.", 0f)
+            }
+            hideKindBtn = Button(TEXT_HIDE_KIND, base, bg, width = thirdW, height = ROW_H, font = Font.VICTOR_14) {
                 position.inTL(pad + thirdW + gap, row2)
                 onClick { selectedIntel(panel)?.let { toggleKindHidden(it) } }
+            }
+            (hideKindBtn as UIComponentAPI).Tooltip(TooltipMakerAPI.TooltipLocation.BELOW, 300f) {
+                addPara("Hides every entry of the same kind as the selected one - every Trait Suggestion, " +
+                    "every Simulator Update - now and in every other save. Undo it here or in Customize.", 0f)
             }
             showHiddenBox = AreaCheckbox("Show hidden", base, bg, bright, thirdW, ROW_H, font = Font.VICTOR_14) {
                 position.inTL(pad + 2f * (thirdW + gap), row2)
                 isChecked = ViewState.showHidden
                 onClick { ViewState.showHidden = isChecked }
             }
-            lastHideEntryText = "Hide entry"
-            lastHideKindText = "Hide kind"
+            (showHiddenBox as UIComponentAPI).Tooltip(TooltipMakerAPI.TooltipLocation.BELOW, 300f) {
+                addPara("Shows the hidden entries again while this is on, so you can select one and unhide it.", 0f)
+            }
+            lastHideEntryText = TEXT_HIDE_ENTRY
+            lastHideKindText = TEXT_HIDE_KIND
         }.apply {
             position.inTL(leftScreen - panel.left, (panel.top - mapComp.top).coerceAtLeast(0f) + 6f)
         }
@@ -319,8 +377,8 @@ object IntelScreenController {
         val sel = selectedIntel(panel)
         val enabled = sel != null
         runCatching { entryBtn.isEnabled = enabled; kindBtn.isEnabled = enabled }
-        val entryText = if (sel != null && EntryHides.isHidden(sel)) "Unhide entry" else "Hide entry"
-        val kindText = if (sel != null && IntelPrefs.isKindHidden(IntelKinds.kindId(sel))) "Unhide kind" else "Hide kind"
+        val entryText = if (sel != null && EntryHides.isHidden(sel)) TEXT_UNHIDE_ENTRY else TEXT_HIDE_ENTRY
+        val kindText = if (sel != null && IntelPrefs.isKindHidden(IntelKinds.kindId(sel))) TEXT_UNHIDE_KIND else TEXT_HIDE_KIND
         if (entryText != lastHideEntryText) { lastHideEntryText = entryText; runCatching { entryBtn.text = entryText } }
         if (kindText != lastHideKindText) { lastHideKindText = kindText; runCatching { kindBtn.text = kindText } }
         showHiddenBox?.let { box -> if (box.isChecked != ViewState.showHidden) runCatching { box.isChecked = ViewState.showHidden } }

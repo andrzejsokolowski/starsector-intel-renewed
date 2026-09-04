@@ -27,7 +27,7 @@ object MessageListSwap {
     fun tryInstall(state: CampaignState, current: Any) {
         if (current.javaClass.name == MutedMessageList::class.java.name) return
         val version = runCatching { Global.getSettings().versionString }.getOrNull() ?: ""
-        if (version !in SUPPORTED_VERSIONS) {
+        if (SUPPORTED_VERSIONS.none { version.contains(it) }) {
             log.info("Intel Renewed: game version '$version' not checked for the popup swap; popups of hidden entries are removed after the fact instead.")
             return
         }

@@ -73,7 +73,7 @@ object CustomizePanel {
         host = panel
         runCatching { build(panel) }.onFailure {
             log.error("Intel Renewed: could not open the Customize window.", it)
-            modal = null
+            close()          // removes the half-built window if it already reached the screen
         }
         ViewState.customizeOpen = modal != null
     }
@@ -153,7 +153,8 @@ object CustomizePanel {
         boxLeft = (pw - boxW) / 2f
         boxTop = (ph - boxH) / 2f
 
-        modal = panel.CustomPanel(pw, ph) { plugin ->
+        panel.CustomPanel(pw, ph) { plugin ->
+            modal = this
             plugin.renderBelow { a ->
                 GL11.glColor4f(0f, 0f, 0f, 0.62f * a)                 // dim the screen behind us
                 GL11.glRectf(plugin.left, plugin.bottom, plugin.right, plugin.top)
@@ -178,11 +179,14 @@ object CustomizePanel {
             val x = boxLeft + PAD
             val innerW = boxW - 2f * PAD
 
-            Text("Customize intel screen", Font.ORBITRON_20) { position.inTL(x, y) }
+            // Close first, so it exists even if something below fails to build.
             Button("Close", bright, bg, width = 110f, height = 26f) {
                 position.inTL(x + innerW - 110f, y)
                 onClick { close() }
             }
+            runCatching {
+
+            Text("CUSTOMIZE INTEL SCREEN", Font.VICTOR_14, bright) { position.inTL(x, y + 4f) }
             y += 34f
 
             Text(summaryLine(), Font.VICTOR_14, gray) { position.inTL(x, y) }
@@ -221,12 +225,12 @@ object CustomizePanel {
             val listsTop = y + 30f
             val listsH = boxTop + boxH - PAD - listsTop
 
-            Text("CATEGORIES", Font.ORBITRON_20, base) { position.inTL(x, y) }
+            Text("CATEGORIES", Font.VICTOR_14, bright) { position.inTL(x, y + 4f) }
             Text("Show / No button / Hide all", Font.VICTOR_14, gray) { position.inTL(x + 160f, y + 4f) }
             buildCategoriesBox(this, x, listsTop, leftW, listsH, base, bg, bright, gray)
 
             val rx = x + leftW + colGap
-            Text("KINDS OF ENTRIES", Font.ORBITRON_20, base) { position.inTL(rx, y) }
+            Text("KINDS OF ENTRIES", Font.VICTOR_14, bright) { position.inTL(rx, y + 4f) }
             Text("Filter:", Font.VICTOR_14) { position.inTL(rx + rightW - 260f, y + 4f) }
             kindFilter = TextField(210f, ROW_H, Font.VICTOR_14) {
                 position.inTL(rx + rightW - 210f, y)
@@ -234,6 +238,11 @@ object CustomizePanel {
             }
             kindsLeft = rx; kindsTop = listsTop; kindsW = rightW; kindsH = listsH
             kindsBox = buildKindsBox(this, base, bg, bright, gray)
+            }.onFailure {
+                log.error("Intel Renewed: the Customize window could not be filled in.", it)
+                Text("Something went wrong building this window; see starsector.log.", Font.VICTOR_14,
+                    Misc.getNegativeHighlightColor()) { position.inTL(x, boxTop + 60f) }
+            }
         }.apply { position.inTL(0f, 0f) }
     }
 
