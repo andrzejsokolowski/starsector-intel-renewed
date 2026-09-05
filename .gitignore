@@ -23,4 +23,4 @@ jars/
 
 # Packaged release archive (regenerated on each version cut)
 *.zip
-IntelRenewed/
+/IntelRenewed/
