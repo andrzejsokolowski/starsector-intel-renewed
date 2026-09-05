@@ -68,6 +68,10 @@ object IntelScreenController {
     private var lastInputs = ""
     private var pendingScrollY: Float? = null
 
+    /** Invisible full-panel layer that catches the right-click hiding gestures on the rows. It never
+     *  consumes anything but its own two gestures, so normal clicking is untouched. */
+    private var gestureLayer: CustomPanelAPI? = null
+
     private var strip: CustomPanelAPI? = null
     /** The strip was taken down because the selected entry draws its own big panel over the map. */
     private var stripHiddenForLargeDesc = false
@@ -189,6 +193,7 @@ object IntelScreenController {
         showHiddenBox = null
         stripHiddenForLargeDesc = false
         stripRebuildRequested = false
+        gestureLayer = null
         CustomizePanel.forget()
         ViewState.customizeOpen = false      // closing the tab closes the window too
     }
@@ -220,7 +225,10 @@ object IntelScreenController {
         pendingScrollY = null
         stripHiddenForLargeDesc = false
         stripRebuildRequested = false
+        gestureLayer = null
         IrDebug.dumpTree(panel, "EventsPanel")
+        runCatching { injectGestureLayer(panel) }
+            .onFailure { log.error("Intel Renewed: could not add the right-click hiding layer.", it) }
         runCatching { injectStrip(panel) }.onFailure { log.error("Intel Renewed: could not add the search strip.", it) }
         if (ViewState.customizeOpen) CustomizePanel.open(panel)
     }
@@ -322,6 +330,49 @@ object IntelScreenController {
         runCatching { playSound("ui_button_pressed") }
     }
 
+    // --- Right-click hiding on the rows ---------------------------------------------------------
+
+    /**
+     * A transparent layer over the whole intel screen that watches for the two hiding gestures on a
+     * row: **Shift + right-click** hides (or unhides) that one entry, **Ctrl + right-click** hides
+     * (or unhides) every entry of the same kind.
+     *
+     * This is the only way in while an entry that draws its own big panel takes the strip's place,
+     * which is why it exists. It draws nothing and consumes an event only when one of its own two
+     * gestures actually lands on a row, so plain clicking, hovering and tooltips behave as usual.
+     */
+    private fun injectGestureLayer(panel: UIPanelAPI) {
+        val w = panel.position.width
+        val h = panel.position.height
+        gestureLayer = panel.CustomPanel(w, h) { plugin ->
+            plugin.onClick { event ->
+                if (!event.isRMBDownEvent) return@onClick
+                if (!IrSettings.rightClickHiding) return@onClick
+                if (ViewState.customizeOpen) return@onClick          // the modal owns input while open
+                val ctrl = event.isCtrlDown
+                val shift = event.isShiftDown
+                if (!ctrl && !shift) return@onClick
+                val intel = intelUnderCursor(event.x.toFloat(), event.y.toFloat()) ?: return@onClick
+                if (ctrl) toggleKindHidden(intel) else toggleEntryHidden(intel)
+                event.consume()
+            }
+        }.apply { position.inTL(0f, 0f) }
+    }
+
+    /** The entry whose row is under (x, y), or null when the cursor is outside the list. */
+    private fun intelUnderCursor(x: Float, y: Float): IntelInfoPlugin? {
+        val list = boundList ?: return null
+        val listComp = list as? UIComponentAPI ?: return null
+        // Rows scrolled out of the viewport keep their coordinates, so clip to the list first.
+        if (x < listComp.left || x > listComp.right || y < listComp.bottom || y > listComp.top) return null
+        val items = runCatching { list.invoke("getItems") as? List<*> }.getOrNull() ?: return null
+        for (item in items) {
+            val comp = item as? UIComponentAPI ?: continue
+            if (x >= comp.left && x <= comp.right && y >= comp.bottom && y <= comp.top) return intelOfItem(item)
+        }
+        return null
+    }
+
     // --- The strip over the map ----------------------------------------------------------------
 
     /**
@@ -413,6 +464,7 @@ object IntelScreenController {
             (hideEntryBtn as UIComponentAPI).Tooltip(TooltipMakerAPI.TooltipLocation.BELOW, 300f) {
                 addPara("Hides only the entry selected in the list, in this save. " +
                     "Turn on Show hidden to see it again and press the button once more to bring it back.", 0f)
+                addPara("Shortcut: Shift + right-click any row in the list.", Misc.getGrayColor(), 4f)
             }
             hideKindBtn = Button(TEXT_HIDE_KIND, base, bg, width = thirdW, height = ROW_H, font = Font.VICTOR_14) {
                 position.inTL(pad + thirdW + gap, row2)
@@ -421,6 +473,7 @@ object IntelScreenController {
             (hideKindBtn as UIComponentAPI).Tooltip(TooltipMakerAPI.TooltipLocation.BELOW, 300f) {
                 addPara("Hides every entry of the same kind as the selected one - every Trait Suggestion, " +
                     "every Simulator Update - now and in every other save. Undo it here or in Customize.", 0f)
+                addPara("Shortcut: Ctrl + right-click any row in the list.", Misc.getGrayColor(), 4f)
             }
             showHiddenBox = AreaCheckbox("Show hidden", base, bg, bright, thirdW, ROW_H, font = Font.VICTOR_14) {
                 position.inTL(pad + 2f * (thirdW + gap), row2)

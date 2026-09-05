@@ -1,6 +1,7 @@
 fieldID,fieldName,fieldType,defaultValue,secondaryValue,fieldDescription,minValue,maxValue,tab
 ir_header_popups,Popups Header,Header,Popups,,,,,Behaviour
 ir_mute_popups,Silence popups of hidden entries,Boolean,true,,"When on, an entry you have hidden (its kind, its category, or the entry itself) no longer shows the message popup in the bottom-left corner. Turn this off to keep the popups while the entries stay hidden on the intel screen.",,,Behaviour
+ir_right_click_hiding,Right-click hiding in the list,Boolean,true,,"With this on, [Shift + right-click] on a row in the intel list hides that one entry, and [Ctrl + right-click] hides every entry of the same kind. Turn it off if it clashes with another mod.",,,Behaviour
 ,,,,,,,,
 ir_header_appearance,Appearance Header,Header,Customize window,,,,,Appearance
 ir_border_color,Outline colour,Color,#80ccff,,"Colour of the outline drawn around the Customize window and the search strip on the intel screen.",,,Appearance

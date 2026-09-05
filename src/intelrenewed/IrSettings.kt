@@ -24,6 +24,7 @@ object IrSettings {
     private const val MOD_ID = IntelRenewedModPlugin.MOD_ID
 
     private const val KEY_MUTE_POPUPS = "ir_mute_popups"
+    private const val KEY_RIGHT_CLICK_HIDING = "ir_right_click_hiding"
     private const val KEY_BORDER_COLOR = "ir_border_color"
     private const val KEY_PANEL_OPACITY = "ir_panel_opacity"
     private const val KEY_WIPE_PREFS = "ir_wipe_prefs"
@@ -39,6 +40,7 @@ object IrSettings {
     // --- Live values ----------------------------------------------------------------------------
 
     var mutePopups = true; private set
+    var rightClickHiding = true; private set
     var borderColor: Color = DEFAULT_BORDER_COLOR; private set
     var panelOpacity: Float = DEFAULT_PANEL_OPACITY; private set
 
@@ -74,6 +76,7 @@ object IrSettings {
 
     private fun reload() {
         mutePopups = bool(KEY_MUTE_POPUPS, true)
+        rightClickHiding = bool(KEY_RIGHT_CLICK_HIDING, true)
         borderColor = runCatching { LunaSettings.getColor(MOD_ID, KEY_BORDER_COLOR) }.getOrNull() ?: DEFAULT_BORDER_COLOR
         panelOpacity = (runCatching { LunaSettings.getFloat(MOD_ID, KEY_PANEL_OPACITY) }.getOrNull()
             ?: DEFAULT_PANEL_OPACITY).coerceIn(0f, 1f)

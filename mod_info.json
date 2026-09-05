@@ -3,7 +3,7 @@
   "name": "Intel Renewed",
   "author": "Oddisz",
   "utility": "true",
-  "version": "0.2.0",
+  "version": "0.3.0",
   "description": "Declutters the intel screen. Hide whole kinds of intel (every Trait Suggestion, every Simulator Update), hide categories you never use, hide single entries you are done with, and search the list. Hidden kinds stop their popups too. Nothing is deleted: everything is hidden on screen only and can be brought back from the Customize panel. Preferences are saved per installation.",
   "gameVersion": "0.98a-RC8",
   "jars": ["jars/IntelRenewed.jar"],

@@ -15,6 +15,9 @@ A Starsector utility mod that declutters the intel screen in a heavily-modded ga
 - **Hide empty categories** — buttons with nothing in them disappear (New, Important and Major events
   always stay, as in the base game).
 - **Hide a single entry** — for that one lore entry you are done with. Stored in that save only.
+- **Right-click hiding** — **Shift + right-click** a row hides that entry, **Ctrl + right-click** hides
+  every entry of that kind. Works anywhere in the list, including while an entry draws its own big
+  panel and the strip has stepped aside. Can be turned off in the settings.
 - **Search** — a search box on the intel screen filters the list by title and category.
 - **Popups stay quiet** — a hidden entry no longer shows its bottom-left message popup. On the game
   version the mod was built against the sound is silenced too; on other versions the card is

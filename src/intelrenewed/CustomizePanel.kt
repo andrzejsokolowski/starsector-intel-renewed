@@ -190,7 +190,11 @@ object CustomizePanel {
             y += 34f
 
             Text(summaryLine(), Font.VICTOR_14, gray) { position.inTL(x, y) }
-            y += 26f
+            y += 18f
+            Text("In the list: Shift + right-click hides one entry, Ctrl + right-click hides every entry " +
+                "of that kind. These work even when the search strip is out of the way.",
+                Font.VICTOR_14, gray) { position.inTL(x, y) }
+            y += 22f
 
             // Switches and the big red button.
             val switchW = 250f

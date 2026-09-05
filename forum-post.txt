@@ -30,6 +30,7 @@ A small strip sits in the top right corner of the map, next to the game's own ST
 [li][b]Hide all like this[/b]: hides every entry of the same kind as the selected one (every Trait Suggestion, every Simulator Update). Stored per installation, so it holds in every save.[/li]
 [li][b]Show hidden[/b]: reveals the hidden entries while it is on, so you can select one and unhide it.[/li]
 [li][b]Customize[/b]: opens the window below.[/li]
+[li][b]Shift + right-click[/b] a row in the list hides that entry, [b]Ctrl + right-click[/b] hides every entry of that kind. Works even when the strip is collapsed or out of the way.[/li]
 [li]The [b]>[/b] button tucks the whole strip away into a small corner tab, and it steps aside on its own while an entry that draws its own big panel over the map is selected.[/li]
 [/list]
 [hr][center][size=12pt][b]The Customize window[/b][/size][/center][hr]
@@ -57,6 +58,8 @@ Negligible. It filters the list the game already builds. No extra scripts runnin
 Yes. It is UI only and safe to add or remove at any time.
 [/spoiler]
 [spoiler=Version log]
+0.3.0
+Right-click hiding in the list: Shift + right-click hides one entry, Ctrl + right-click hides every entry of that kind. Works when the strip is collapsed or hidden behind an entry that draws its own panel.
 0.2.0
 The strip can be collapsed into a small corner tab, and it hides itself while a modded entry draws its own panel over the map, so nothing overlaps.
 0.1.2
