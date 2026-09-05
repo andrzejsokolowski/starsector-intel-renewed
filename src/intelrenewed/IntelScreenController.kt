@@ -69,6 +69,11 @@ object IntelScreenController {
     private var pendingScrollY: Float? = null
 
     private var strip: CustomPanelAPI? = null
+    /** The strip was taken down because the selected entry draws its own big panel over the map. */
+    private var stripHiddenForLargeDesc = false
+    /** A collapse/expand click asked for the strip to be rebuilt; done on the next frame, never
+     *  from inside the click itself. */
+    private var stripRebuildRequested = false
     private var searchField: TextFieldAPI? = null
     private var hideEntryBtn: ButtonAPI? = null
     private var hideKindBtn: ButtonAPI? = null
@@ -115,8 +120,42 @@ object IntelScreenController {
             }
         }
 
+        updateStripVisibility(panel)
         updateStripButtons(panel)
         CustomizePanel.advance(panel)
+    }
+
+    /**
+     * Some entries (modded price tables and the like) replace the map with a big panel of their
+     * own, drawn over everything including our strip. While such an entry is selected the strip
+     * is taken down, and it comes back when the map does. Also carries out a pending
+     * collapse / expand.
+     */
+    private fun updateStripVisibility(panel: UIPanelAPI) {
+        val sel = selectedIntel(panel)
+        val covered = sel != null && runCatching { sel.hasLargeDescription() }.getOrDefault(false)
+        if (covered) {
+            if (strip != null) {
+                removeStrip(panel)
+                stripHiddenForLargeDesc = true
+            }
+            return
+        }
+        if (stripRebuildRequested || stripHiddenForLargeDesc) {
+            stripRebuildRequested = false
+            stripHiddenForLargeDesc = false
+            removeStrip(panel)
+            runCatching { injectStrip(panel) }.onFailure { log.error("Intel Renewed: could not rebuild the search strip.", it) }
+        }
+    }
+
+    private fun removeStrip(panel: UIPanelAPI) {
+        strip?.let { runCatching { panel.removeComponent(it) } }
+        strip = null
+        searchField = null
+        hideEntryBtn = null
+        hideKindBtn = null
+        showHiddenBox = null
     }
 
     /** Everything that changes what we hide, independent of what the game has drawn. */
@@ -148,6 +187,8 @@ object IntelScreenController {
         hideEntryBtn = null
         hideKindBtn = null
         showHiddenBox = null
+        stripHiddenForLargeDesc = false
+        stripRebuildRequested = false
         CustomizePanel.forget()
         ViewState.customizeOpen = false      // closing the tab closes the window too
     }
@@ -177,6 +218,8 @@ object IntelScreenController {
         CustomizePanel.forget()
         lastInputs = filterInputs()
         pendingScrollY = null
+        stripHiddenForLargeDesc = false
+        stripRebuildRequested = false
         IrDebug.dumpTree(panel, "EventsPanel")
         runCatching { injectStrip(panel) }.onFailure { log.error("Intel Renewed: could not add the search strip.", it) }
         if (ViewState.customizeOpen) CustomizePanel.open(panel)
@@ -300,19 +343,34 @@ object IntelScreenController {
             }
         }
 
+        val stripY = (panel.top - mapComp.top).coerceAtLeast(0f) + 6f
+
+        // Collapsed: nothing but a small tab in the corner that brings the strip back.
+        if (IntelPrefs.stripCollapsed) {
+            val tabW = 30f
+            val tabH = ROW_H + 2f * STRIP_PAD
+            strip = panel.CustomPanel(tabW, tabH) { plugin ->
+                plugin.renderBelow { alpha -> drawStripBackground(plugin.left, plugin.bottom, plugin.right, plugin.top, alpha) }
+                plugin.onClick { e -> if (e.isLMBDownEvent || e.isRMBDownEvent) e.consume() }
+                plugin.onScroll { e -> e.consume() }
+                val expand = Button("<", bright, bg, width = tabW - 2f * STRIP_PAD, height = ROW_H, font = Font.VICTOR_14) {
+                    position.inTL(STRIP_PAD, STRIP_PAD)
+                    onClick { IntelPrefs.stripCollapsed = false; stripRebuildRequested = true }
+                }
+                (expand as UIComponentAPI).Tooltip(TooltipMakerAPI.TooltipLocation.BELOW, 260f) {
+                    addPara("Show the Intel Renewed search box and hide buttons again.", 0f)
+                }
+            }.apply { position.inTL(mapComp.right - 8f - tabW - panel.left, stripY) }
+            return
+        }
+
         val available = mapComp.right - occupiedRight - 16f
         val w = minOf(560f, available).coerceAtLeast(300f)
         val h = ROW_H * 2f + STRIP_PAD * 3f
         val leftScreen = mapComp.right - 8f - w
 
         strip = panel.CustomPanel(w, h) { plugin ->
-            plugin.renderBelow { alpha ->
-                GL11.glColor4f(0f, 0f, 0f, 0.6f * alpha)
-                GL11.glRectf(plugin.left, plugin.bottom, plugin.right, plugin.top)
-                val c = IrSettings.borderColor
-                GL11.glColor4f(c.red / 255f, c.green / 255f, c.blue / 255f, 0.8f * alpha)
-                drawBorder(plugin.left, plugin.top, plugin.right, plugin.bottom)
-            }
+            plugin.renderBelow { alpha -> drawStripBackground(plugin.left, plugin.bottom, plugin.right, plugin.top, alpha) }
             // Keep clicks and wheel scrolls off the map underneath.
             plugin.onClick { e -> if (e.isLMBDownEvent || e.isRMBDownEvent) e.consume() }
             plugin.onScroll { e -> e.consume() }
@@ -322,12 +380,13 @@ object IntelScreenController {
             val row1 = pad
             val row2 = pad + ROW_H + pad
 
-            // Row 1: "Search" label, the box, Customize.
+            // Row 1: "Search" label, the box, Customize, and the collapse tab.
             val labelW = 52f
             val customizeW = 104f
+            val collapseW = 22f
             val gap = 6f
             Text("Search:", Font.VICTOR_14) { position.inTL(pad, row1 + 3f) }
-            val fieldW = inner - labelW - customizeW - 2f * gap
+            val fieldW = inner - labelW - customizeW - collapseW - 3f * gap
             searchField = TextField(fieldW, ROW_H, Font.VICTOR_14) {
                 position.inTL(pad + labelW + gap, row1)
                 text = ViewState.searchText
@@ -335,6 +394,14 @@ object IntelScreenController {
             Button("Customize", bright, bg, width = customizeW, height = ROW_H, font = Font.VICTOR_14) {
                 position.inTL(pad + labelW + gap + fieldW + gap, row1)
                 onClick { CustomizePanel.toggle(panel) }
+            }
+            val collapse = Button(">", base, bg, width = collapseW, height = ROW_H, font = Font.VICTOR_14) {
+                position.inTL(pad + labelW + gap + fieldW + gap + customizeW + gap, row1)
+                onClick { IntelPrefs.stripCollapsed = true; stripRebuildRequested = true }
+            }
+            (collapse as UIComponentAPI).Tooltip(TooltipMakerAPI.TooltipLocation.BELOW, 260f) {
+                addPara("Tuck this strip away into a small corner tab. Handy when another mod's entry " +
+                    "draws over this part of the screen. The tab brings it back.", 0f)
             }
 
             // Row 2: act on the selected entry, and the momentary reveal.
@@ -366,8 +433,16 @@ object IntelScreenController {
             lastHideEntryText = TEXT_HIDE_ENTRY
             lastHideKindText = TEXT_HIDE_KIND
         }.apply {
-            position.inTL(leftScreen - panel.left, (panel.top - mapComp.top).coerceAtLeast(0f) + 6f)
+            position.inTL(leftScreen - panel.left, stripY)
         }
+    }
+
+    private fun drawStripBackground(l: Float, b: Float, r: Float, t: Float, alpha: Float) {
+        GL11.glColor4f(0f, 0f, 0f, 0.6f * alpha)
+        GL11.glRectf(l, b, r, t)
+        val c = IrSettings.borderColor
+        GL11.glColor4f(c.red / 255f, c.green / 255f, c.blue / 255f, 0.8f * alpha)
+        drawBorder(l, t, r, b)
     }
 
     /** Enables the two Hide buttons only with a selected entry, and words them for its state. */

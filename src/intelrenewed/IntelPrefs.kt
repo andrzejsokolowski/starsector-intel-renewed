@@ -38,6 +38,7 @@ object IntelPrefs {
     private const val KEY_CATEGORIES_HIDDEN = "categoriesHidden"  // array of tag ids
     private const val KEY_CATEGORY_NAMES = "categoryNames"        // object: tag id -> display name
     private const val KEY_HIDE_EMPTY = "hideEmptyCategories"
+    private const val KEY_STRIP_COLLAPSED = "stripCollapsed"
 
     private val log = Global.getLogger(IntelPrefs::class.java)
 
@@ -46,6 +47,7 @@ object IntelPrefs {
     private val categoryHiddenSet = LinkedHashSet<String>()
     private val categoryNameMap = HashMap<String, String>()
     private var hideEmpty = true
+    private var stripCollapsedFlag = false
 
     private var loaded = false
 
@@ -87,6 +89,9 @@ object IntelPrefs {
             }
         }
         if (json.has(KEY_HIDE_EMPTY) && !json.isNull(KEY_HIDE_EMPTY)) hideEmpty = json.optBoolean(KEY_HIDE_EMPTY, true)
+        if (json.has(KEY_STRIP_COLLAPSED) && !json.isNull(KEY_STRIP_COLLAPSED)) {
+            stripCollapsedFlag = json.optBoolean(KEY_STRIP_COLLAPSED, false)
+        }
     }
 
     private fun readStrings(array: JSONArray?, into: MutableSet<String>) {
@@ -114,6 +119,7 @@ object IntelPrefs {
             for ((k, v) in categoryNameMap) names.put(k, v)
             json.put(KEY_CATEGORY_NAMES, names)
             json.put(KEY_HIDE_EMPTY, hideEmpty)
+            json.put(KEY_STRIP_COLLAPSED, stripCollapsedFlag)
             json.save()
         }.onFailure {
             log.error("Intel Renewed: could not write $COMMON_FILE; this session's changes are not saved.", it)
@@ -175,6 +181,11 @@ object IntelPrefs {
         get() { ensureLoaded(); return hideEmpty }
         set(value) { ensureLoaded(); if (hideEmpty != value) { hideEmpty = value; save() } }
 
+    /** Whether the search-and-hide strip on the intel screen is tucked away to a small corner tab. */
+    var stripCollapsed: Boolean
+        get() { ensureLoaded(); return stripCollapsedFlag }
+        set(value) { ensureLoaded(); if (stripCollapsedFlag != value) { stripCollapsedFlag = value; save() } }
+
     // --- Maintenance ---------------------------------------------------------------------------
 
     /** True when no kind or category is hidden. */
@@ -191,6 +202,7 @@ object IntelPrefs {
         categoryHiddenSet.clear()
         categoryNameMap.clear()
         hideEmpty = true
+        stripCollapsedFlag = false
         save()
         log.info("Intel Renewed: wiped all saved preferences.")
     }

@@ -25,9 +25,11 @@ lists everything hidden so it can be turned back on. The mod never touches other
 
 ## Where things are
 
-- A strip in the map's top-right corner: the search box, **Customize**, and **Hide entry** /
-  **Hide kind** for the selected entry, plus a **Show hidden** toggle that reveals hidden entries
-  for a moment.
+- A strip in the map's top-right corner: the search box, **Customize**, and **Hide this entry** /
+  **Hide all like this** for the selected entry, plus a **Show hidden** toggle that reveals hidden
+  entries for a moment. The `>` button tucks the strip away into a small corner tab (remembered per
+  installation), and the strip steps aside on its own while an entry that draws its own big panel
+  over the map is selected.
 - The **Customize** window: every category with Show / No button / Hide all, every kind of entry with
   a Hidden toggle, the hide-empty-categories switch, and Restore everything.
 
