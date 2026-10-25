@@ -16,7 +16,6 @@ Cool, open Customize and switch the rest off.
 
 
 Nothing is deleted. Entries are only kept off the screen, and everything can be turned back on.
-The code is fully open source. You don't have to credit me. Claude Code built this anyway.
 [color=red]Requires [b]LunaLib[/b] and [b]LazyLib[/b].[/color]
 [/b][/center]
 [center]
@@ -57,6 +56,18 @@ Negligible. It filters the list the game already builds. No extra scripts runnin
 [b]Can I add or remove it mid save?[/b]
 Yes. It is UI only and safe to add or remove at any time.
 [/spoiler]
+[spoiler=AI use disclaimer]Some or all assets and code in this mod were created using AI tools:
+[list]
+[li]Code: Claude Code (Claude Opus 5, Claude Opus 5.5 and Claude Fable 5.1)[/li]
+[li]Text (readme and this post): Claude Code (Claude Opus 5, Claude Opus 5.5 and Claude Fable 5.1)[/li]
+[li]Icon: Gemini[/li][/list]
+[/spoiler]
+
+[spoiler=License]
+This mod is under the CC0 (Creative Commons Zero) License, allowing you to do whatever you want with the code, without giving any credit to anyone.
+The UIFramework code by Starficz inside it keeps its own licence (LGPL-3.0).
+[/spoiler]
+
 [spoiler=Version log]
 0.3.0
 Right-click hiding in the list: Shift + right-click hides one entry, Ctrl + right-click hides every entry of that kind. Works when the strip is collapsed or hidden behind an entry that draws its own panel.
