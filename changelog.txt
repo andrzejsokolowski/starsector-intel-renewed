@@ -1,0 +1,16 @@
+Version 0.3.0 (2026-09-05)
+- Right-click hiding in the list: Shift + right-click hides one entry, Ctrl + right-click hides every entry of that kind. Works when the strip is collapsed or hidden behind an entry that draws its own panel.
+
+Version 0.2.0 (2026-09-05)
+- The strip can be collapsed into a small corner tab, and it hides itself while a modded entry draws its own panel over the map, so nothing overlaps.
+
+Version 0.1.2 (2026-09-04)
+- Mod icon, forum thread and version checker.
+
+Version 0.1.1
+- Fixed the Customize window opening empty with no way to close it.
+- Un-hiding brings entries straight back. Hiding the selected entry no longer confuses the list.
+- Buttons renamed to "Hide this entry" / "Hide all like this", with tooltips.
+
+Version 0.1.0
+- First test release: hide kinds, categories and single entries, hide empty category buttons, search box, popups of hidden entries silenced.

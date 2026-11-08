@@ -1,5 +1,6 @@
 {
     "masterVersionFile":"https://raw.githubusercontent.com/andrzejsokolowski/starsector-intel-renewed/main/intel_renewed.version",
+    "changelogURL":"https://raw.githubusercontent.com/andrzejsokolowski/starsector-intel-renewed/main/changelog.txt",
     "modName":"Intel Renewed",
     "modThreadId":35978,
     "modVersion":
