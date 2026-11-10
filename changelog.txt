@@ -1,3 +1,6 @@
+Version 0.3.1 (2026-11-10)
+- New gold icon in mod managers (TriOS) and in LunaLib's settings.
+
 Version 0.3.0 (2026-09-05)
 - Right-click hiding in the list: Shift + right-click hides one entry, Ctrl + right-click hides every entry of that kind. Works when the strip is collapsed or hidden behind an entry that draws its own panel.
 

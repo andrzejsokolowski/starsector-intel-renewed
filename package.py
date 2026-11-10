@@ -9,7 +9,7 @@ import zipfile
 ROOT = os.path.dirname(os.path.abspath(__file__))
 STAGE = os.path.join(ROOT, "IntelRenewed")
 ZIP = os.path.join(ROOT, "Intel-Renewed.zip")
-SHIP = ["mod_info.json", "intel_renewed.version", "README.md", "data", "jars", "graphics"]
+SHIP = ["mod_info.json", "intel_renewed.version", "icon.png", "README.md", "data", "jars", "graphics"]
 
 if os.path.isdir(STAGE):
     shutil.rmtree(STAGE)
