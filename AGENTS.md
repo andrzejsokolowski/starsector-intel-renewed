@@ -12,8 +12,7 @@ Tasks, history and test lists: the **Intel Renewed board** in Andrzej's Notion, 
 API notes, including "Game API: the intel screen": **Claude Information**
 (`collection://7bf9b1d6-b9e5-4b62-87f1-757bbaa51919`), starting with "Start here: working on
 Starsector mods through Notion". Read the board before working, give every task a ticket (ticket
-ids start with IR) and keep it current. Intel Renewed is also bundled in Coalesced Little Mods:
-bring every change over there too. The Notion tools are deferred: load them with ToolSearch first.
+ids start with IR) and keep it current. The Notion tools are deferred: load them with ToolSearch first.
 
 Update the board during the work, not only at release time. Before changing files, put the
 message on its ticket: a new request gets a new ticket (In progress), and a problem Andrzej
