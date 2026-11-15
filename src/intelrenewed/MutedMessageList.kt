@@ -18,7 +18,7 @@ class MutedMessageList : com.fs.starfarer.campaign.comms.`super`() {
         intel: IntelInfoPlugin?,
         action: CommMessageAPI.MessageClickAction?,
         custom: Any?,
-    ): com.fs.starfarer.campaign.comms.C? {
+    ): com.fs.starfarer.campaign.comms.ooOO? {
         if (intel != null && runCatching { IntelRules.isPopupMuted(intel) }.getOrDefault(false)) return null
         return super.addMessage(intel, action, custom)
     }

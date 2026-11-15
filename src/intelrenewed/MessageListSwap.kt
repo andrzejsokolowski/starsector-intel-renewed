@@ -20,7 +20,7 @@ object MessageListSwap {
     private val log = Global.getLogger(MessageListSwap::class.java)
 
     /** Game versions whose popup-list class names this build was checked against. */
-    private val SUPPORTED_VERSIONS = setOf("0.98a-RC8")
+    private val SUPPORTED_VERSIONS = setOf("0.98.5a")
 
     private const val FIELD_NAME = "messageListV3"
 
