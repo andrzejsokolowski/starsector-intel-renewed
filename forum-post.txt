@@ -18,6 +18,10 @@ Cool, open Customize and switch the rest off.
 Nothing is deleted. Entries are only kept off the screen, and everything can be turned back on.
 [color=red]Requires [b]LunaLib[/b] and [b]LazyLib[/b].[/color]
 [/b][/center]
+[spoiler=Screenshots]
+[center][img]https://github.com/andrzejsokolowski/starsector-intel-renewed/blob/main/screenshots/01-intel-screen-search.webp?raw=true[/img]
+[img]https://github.com/andrzejsokolowski/starsector-intel-renewed/blob/main/screenshots/02-customize-window.webp?raw=true[/img][/center]
+[/spoiler]
 [center]
 [table]
 [tr]
