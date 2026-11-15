@@ -12,13 +12,13 @@ import com.fs.starfarer.api.campaign.comm.IntelInfoPlugin
  * installed on game versions it was built against (see [MessageListSwap]); elsewhere the
  * after-the-fact sweep in [PopupMuter] does the job without the sound.
  */
-class MutedMessageList : com.fs.starfarer.campaign.comms.`super`() {
+class MutedMessageList : com.fs.starfarer.campaign.comms.A() {
 
     override fun addMessage(
         intel: IntelInfoPlugin?,
         action: CommMessageAPI.MessageClickAction?,
         custom: Any?,
-    ): com.fs.starfarer.campaign.comms.ooOO? {
+    ): com.fs.starfarer.campaign.comms.C? {
         if (intel != null && runCatching { IntelRules.isPopupMuted(intel) }.getOrDefault(false)) return null
         return super.addMessage(intel, action, custom)
     }

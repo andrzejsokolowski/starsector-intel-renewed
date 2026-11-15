@@ -1,3 +1,6 @@
+Version 0.4.1 (2026-11-15)
+- Fixed for the Starsector 0.98.5a RC6 hotfix.
+
 Version 0.4.0 (2026-11-15)
 - Updated for Starsector 0.98.5a.
 

@@ -73,6 +73,8 @@ The UIFramework code by Starficz inside it keeps its own licence (LGPL-3.0).
 [/spoiler]
 
 [spoiler=Version log]
+0.4.1
+Fixed for the Starsector 0.98.5a RC6 hotfix.
 0.4.0
 Updated for Starsector 0.98.5a.
 0.3.1
